@@ -5,14 +5,22 @@ some_packages <- sample(all_packages[,1], size = 1000)
 
 
 get_downloads <- function(package){
+  if(package == "redland-bindings"){
+    package <- "redland"
+  }
   data <- try(cranlogs::cran_downloads(package,
-                           when = "last-week"))
+                           when = "last-month"))
   if(methods::is(data, "try-error")){
     print(package)
     return(NULL)
   }else{
+    data <- dplyr::mutate_(data, week = lazyeval::interp(quote(lubridate::week(date))))
+    data <- dplyr::group_by_(data, "week")
+    data <- dplyr::filter_(data, lazyeval::interp(quote(n() == 7)))
+    data <- dplyr::summarise_(data, count = lazyeval::interp(quote(sum(count))))
+    count <- median(data$count)
     return(data.frame(package = package,
-                      no_downloads = sum(data$count)))
+                      no_downloads = count))
   }
   
 }
