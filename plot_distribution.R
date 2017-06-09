@@ -1,21 +1,26 @@
 library("ggplot2")
 library("dplyr")
 library("hrbrthemes")
+library("plotly")
 downloads <- readr::read_csv("downloads.csv")
 
 
-ggplot(downloads) +
+p <- ggplot(downloads) +
   geom_histogram(aes(count)) +
   scale_x_log10() +
-  geom_point(aes(x = count), y = 0, shape = "|",
+  geom_point(aes(x = count,
+                 text=sprintf("<br>package: %s", package)), y = 0, shape = "|",
              col = "blue", size = 1.2,
              data = dplyr::filter(downloads, ropensci)) +
-  xlab("total number of downloads over the last 4 weeks") +
-  theme_ipsum()
+  xlab("Median number of downloads over the last 4 weeks") +
+  ylab("No. of packages") +
+  theme_ipsum(base_size = 20,
+              axis_title_size = 20)
 
-ggsave(file = "no_downloads.png", height = 6, width = 6)
+ggsave(p, file = "no_downloads.png", height = 6, width = 6)
 
-
+gg <- ggplotly(p)
+htmlwidgets::saveWidget(gg, file = "no_downloads.html")
 # another attempt 
 # FIXME: the bar reordering is being lost though when adding the rug, 
 # not sure how to fix it
